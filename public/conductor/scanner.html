@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conductor Dashboard - Mobile Optimized</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --gradient-green: linear-gradient(135deg, #10b981, #059669);
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-bottom: 80px;
+            /* Space for bottom nav */
+        }
+
+        /* Animated Background Orbs */
+        .bg-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            filter: blur(80px);
+            border-radius: 50%;
+            opacity: 0.15;
+        }
+
+        .orb-1 {
+            top: -100px;
+            right: -50px;
+            background: var(--accent-green);
+        }
+
+        .orb-2 {
+            bottom: -100px;
+            left: -50px;
+            background: var(--accent-blue);
+        }
+
+        /* Topbar */
+        .top-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            background: var(--gradient-green);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Main Sections */
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status Cards */
+        .status-badge {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        /* Scanner Box */
+        .scanner-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .viewport-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qr-scanner-div {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .scanner-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn-action {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-green);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: white;
+        }
+
+        /* Manual Entry */
+        .manual-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .form-input {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-family: monospace;
+        }
+
+        /* Result Panel */
+        .result-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 30px 30px 0 0;
+            padding: 24px;
+            z-index: 200;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .result-overlay.show {
+            transform: translateY(0);
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        /* History Table */
+        .history-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .history-status {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 calc(12px + var(--safe-bottom));
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 150;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            gap: 4px;
+            transition: 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--accent-green);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        /* Utility */
+        .close-btn {
+            background: #334155;
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="logo">BharatPass</div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div id="user-initial"
+                style="width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-green); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">
+                C</div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- SECTION: SCANNER -->
+        <section id="section-scanner" class="section active">
+            <div class="status-badge" id="scan-count">0 scans today</div>
+
+            <div class="scanner-card">
+                <div class="viewport-container" id="scanner-viewport">
+                    <div class="scanner-placeholder" id="camera-idle">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">📷</div>
+                        <p>Camera Ready</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Click button below to start</p>
+                    </div>
+                </div>
+                <div style="padding: 16px;">
+                    <button class="btn-action btn-primary" id="btn-start-scan" onclick="startScan()">
+                        <span>📷</span> Start Scanning
+                    </button>
+                    <button class="btn-action btn-secondary" id="btn-stop-scan" onclick="stopScan()"
+                        style="display: none;">
+                        <span>⏹</span> Stop Camera
+                    </button>
+                </div>
+            </div>
+
+            <div class="manual-box">
+                <h3 style="margin: 0; font-size: 1rem;">Manual Verify</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0 0;">Passenger se OTP puchho aur yaha daalo</p>
+                <div class="input-group">
+                    <input type="text" class="form-input" id="manual-otp" placeholder="6-digit OTP..." maxlength="6" style="font-size:1.2rem; text-align:center; letter-spacing:8px;">
+                    <button class="btn-action btn-primary" style="width: auto; padding: 0 20px;"
+                        onclick="processManualOtp()">Verify</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: HISTORY -->
+        <section id="section-history" class="section">
+            <h2 style="font-family: 'Space Grotesk';">Recent History</h2>
+            <div id="history-list">
+                <!-- History items will be injected here -->
+            </div>
+        </section>
+
+        <!-- SECTION: PROFILE -->
+        <section id="section-profile" class="section">
+            <div class="manual-box" style="text-align: center; padding: 40px 20px;">
+                <div id="profile-initial"
+                    style="width: 80px; height: 80px; background: var(--gradient-green); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    C</div>
+                <h2 id="profile-name" style="margin-bottom: 5px;">Conductor</h2>
+                <p id="profile-id" style="color: var(--text-muted); margin-top: 0;">ID: COND-xxxx</p>
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+                <button class="btn-action btn-secondary" onclick="logout()">🚪 Logout</button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Result Overlay Drawer -->
+    <div class="result-overlay" id="result-drawer">
+        <div class="result-header">
+            <div class="result-icon" id="res-icon">✅</div>
+            <h2 id="res-title" style="margin: 0;">Valid Pass</h2>
+            <p id="res-msg" style="color: var(--text-secondary);">Welcome aboard!</p>
+        </div>
+        <div id="res-details">
+            <!-- Details go here -->
+        </div>
+        <button class="close-btn" onclick="closeResult()">Dismiss</button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="switchSection('scanner', this)">
+            <span class="nav-icon">📷</span>
+            <span>Scanner</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchSection('history', this)">
+            <span class="nav-icon">📋</span>
+            <span>History</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchSection('profile', this)">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- App Logic Injection -->
+    <script src="../js/app.js"></script>
+    <script>
+        let qrScanner = null;
+        let isScanning = false;
+        let currentSession = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            currentSession = requireAuth('conductor');
+            if (!currentSession) return;
+
+            // Populate profile data
+            document.getElementById('profile-name').textContent = currentSession.name;
+            const init = currentSession.name.charAt(0).toUpperCase();
+            document.getElementById('user-initial').textContent = init;
+            document.getElementById('profile-initial').textContent = init;
+            document.getElementById('profile-id').textContent = 'ID: ' + currentSession.id.substring(0, 8).toUpperCase();
+
+            updateScanCount();
+        });
+
+        async function updateScanCount() {
+            try {
+                const logs = await fetch(`${API_URL}/api/conductor/logs`).then(r => r.json());
+                const today = new Date().toISOString().split('T')[0];
+                const count = logs.filter(l => l.scannedAt && l.scannedAt.startsWith(today)).length;
+                document.getElementById('scan-count').textContent = `${count} scans today`;
+            } catch (err) { }
+        }
+
+        // UI Logic
+        function switchSection(name, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`section-${name}`).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+
+            if (name === 'history') renderHistory();
+            if (isScanning) stopScan();
+        }
+
+        function startScan() {
+            const viewport = document.getElementById('scanner-viewport');
+            document.getElementById('camera-idle').style.display = 'none';
+            document.getElementById('btn-start-scan').style.display = 'none';
+            document.getElementById('btn-stop-scan').style.display = 'flex';
+
+            let scannerDiv = document.getElementById('qr-scanner-div');
+            if (!scannerDiv) {
+                scannerDiv = document.createElement('div');
+                scannerDiv.id = 'qr-scanner-div';
+                viewport.appendChild(scannerDiv);
+            }
+
+            qrScanner = new Html5Qrcode("qr-scanner-div");
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+
+            qrScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    console.error(err);
+                    alert("Camera access denied");
+                    stopScan();
+                });
+            isScanning = true;
+        }
+
+        function stopScan() {
+            if (qrScanner) {
+                qrScanner.stop().then(() => {
+                    qrScanner.clear();
+                    document.getElementById('qr-scanner-div').remove();
+                }).catch(e => console.log(e));
+            }
+            document.getElementById('camera-idle').style.display = 'block';
+            document.getElementById('btn-start-scan').style.display = 'flex';
+            document.getElementById('btn-stop-scan').style.display = 'none';
+            isScanning = false;
+        }
+
+        function onScanSuccess(decodedText) {
+            stopScan();
+            // Haptic Feedback for mobile
+            if (window.navigator.vibrate) window.navigator.vibrate(100);
+            processTokenString(decodedText);
+        }
+
+        function processManualOtp() {
+            const otp = document.getElementById('manual-otp').value.trim();
+            if (!otp || otp.length !== 6) { alert('6-digit OTP daalo'); return; }
+            // Send OTP for manual verification
+            processTokenString(JSON.stringify({ otp }), true);
+            document.getElementById('manual-otp').value = '';
+        }
+
+        async function processTokenString(rawText, isManual = false) {
+            let passId = null;
+            let otp = null;
+            let qrToken = null;
+
+            try {
+                const qrData = JSON.parse(rawText);
+                if (qrData.passId) passId = qrData.passId;
+                if (qrData.otp) otp = qrData.otp;
+                if (qrData.token) qrToken = qrData.token;
+            } catch (e) {
+                // If not JSON, treat as raw token for manual entry
+                qrToken = rawText;
+            }
+
+            try {
+                const res = await apiPost('/api/conductor/scan', {
+                    passId: passId,
+                    otp: otp,
+                    qrToken: qrToken,
+                    isManual: isManual,
+                    conductorId: currentSession.id
+                });
+                const { result, pass, passengerName, passengerPhoto } = res;
+                showResult(result, {
+                    name: passengerName || 'Passenger',
+                    photo: passengerPhoto || null,
+                    id: pass ? pass._id : 'N/A',
+                    route: pass ? (pass.city || pass.route || 'City Pass') : 'N/A',
+                    validity: pass ? formatDate(pass.validUntil) : 'N/A'
+                });
+                updateScanCount();
+            } catch (err) {
+                alert('Verification failed: ' + err.message);
+            }
+        }
+
+        function showResult(status, data) {
+            const drawer = document.getElementById('result-drawer');
+            const resIcon = document.getElementById('res-icon');
+            const resTitle = document.getElementById('res-title');
+            const resDetails = document.getElementById('res-details');
+
+            if (status === 'valid') {
+                resIcon.textContent = '✅';
+                resTitle.textContent = 'Valid Pass';
+                resTitle.style.color = 'var(--accent-green)';
+                document.getElementById('res-msg').textContent = 'Welcome aboard!';
+            } else if (status === 'expired') {
+                resIcon.textContent = '⚠️';
+                resTitle.textContent = 'Expired';
+                resTitle.style.color = 'var(--accent-orange)';
+                document.getElementById('res-msg').textContent = 'Pass expired. Passenger needs renewal.';
+            } else if (status === 'otp_expired') {
+                resIcon.textContent = '⏱️';
+                resTitle.textContent = 'OTP Expired';
+                resTitle.style.color = 'var(--accent-red)';
+                document.getElementById('res-msg').textContent = 'QR code expired. Ask passenger to refresh QR.';
+            } else if (status === 'otp_used') {
+                resIcon.textContent = '🔒';
+                resTitle.textContent = 'Already Used';
+                resTitle.style.color = 'var(--accent-red)';
+                document.getElementById('res-msg').textContent = 'This QR was already scanned. Ask passenger to refresh.';
+            } else {
+                resIcon.textContent = '❌';
+                resTitle.textContent = 'Invalid';
+                resTitle.style.color = 'var(--accent-red)';
+                document.getElementById('res-msg').textContent = 'Token not found or invalid.';
+            }
+
+            // Determine border color based on result
+            const borderColor = status === 'valid' ? 'var(--accent-green)' : 'var(--accent-red)';
+
+            // Photo + details
+            resDetails.innerHTML = `
+                ${data.photo ? `
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <img src="${data.photo}" style="width:100px; height:100px; object-fit:cover; border-radius:50%; border:4px solid ${borderColor}; box-shadow: 0 4px 15px rgba(0,0,0,0.3);" />
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">📸 Verify face with passenger</div>
+                    </div>
+                ` : `
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="width:100px; height:100px; border-radius:50%; background:#334155; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:2rem; border:4px solid ${borderColor};">${data.name.charAt(0).toUpperCase()}</div>
+                        <div style="font-size:0.75rem; color:var(--accent-orange); margin-top:6px;">⚠️ No photo on file</div>
+                    </div>
+                `}
+                <div class="detail-row"><span class="detail-label">Passenger</span><span class="detail-value">${data.name}</span></div>
+                <div class="detail-row"><span class="detail-label">Pass ID</span><span class="detail-value">${data.id}</span></div>
+                <div class="detail-row"><span class="detail-label">Route</span><span class="detail-value">${data.route}</span></div>
+                <div class="detail-row"><span class="detail-label">Valid Until</span><span class="detail-value">${data.validity}</span></div>
+            `;
+
+            drawer.classList.add('show');
+        }
+
+        function closeResult() {
+            document.getElementById('result-drawer').classList.remove('show');
+        }
+
+        async function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '<div style="text-align:center; padding: 20px;">Loading...</div>';
+            try {
+                const logs = await fetch(`${API_URL}/api/conductor/logs`).then(r => r.json());
+                if (logs.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 20px;">No scan history found.</div>';
+                    return;
+                }
+                list.innerHTML = logs.map(item => `
+                    <div class="history-card">
+                        <div class="history-status" style="background: ${item.result === 'valid' ? 'rgba(16,185,129,0.1)' : (item.result === 'expired' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239,68,68,0.1)')}; color: ${item.result === 'valid' ? 'var(--accent-green)' : (item.result === 'expired' ? 'var(--accent-orange)' : 'var(--accent-red)')}">
+                            ${item.result === 'valid' ? '✅' : (item.result === 'expired' ? '⚠️' : '❌')}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${item.passengerName || 'Passenger'}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${formatDateTime(item.scannedAt)}</div>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: bold; color: ${item.result === 'valid' ? 'var(--accent-green)' : (item.result === 'expired' ? 'var(--accent-orange)' : 'var(--accent-red)')}">
+                            ${item.result.toUpperCase()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = '<div style="color:var(--accent-red); padding:20px;">Failed to load history</div>';
+            }
+        }
+
+    </script>
+</body>
+
+</html>
